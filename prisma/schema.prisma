@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(uuid())
+  phoneNumber      String             @unique
+  currentPoints    Int                @default(0)
+  createdAt        DateTime           @default(now())
+  transactions     Transaction[]
+  pointLogs        PointLog[]
+  rewardRedemptions RewardRedemption[]
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  amount          Decimal
+  transactionDate DateTime @default(now())
+}
+
+model PointLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  changeAmount Int
+  actionType   String // e.g., 'EARN', 'REDEEM'
+  createdAt    DateTime @default(now())
+}
+
+model SystemConfig {
+  key   String @id
+  value String
+}
+
+model Reward {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?
+  pointsCost  Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  redemptions RewardRedemption[]
+}
+
+model VerificationToken {
+  id         String   @id @default(uuid())
+  identifier  String   // Phone number
+  token      String   // 6-digit OTP
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+}
+
+model RewardRedemption {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  rewardId    String
+  reward      Reward   @relation(fields: [rewardId], references: [id])
+  code        String   @unique
+  status      String   @default("PENDING") // PENDING, VERIFIED, COMPLETED, CANCELLED
+  pointsCost  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  verifiedAt  DateTime?
+  completedAt DateTime?
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // Hashed password
+  name      String?  // Display name
+  role      String   @default("admin") // admin, manager
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
