@@ -3,12 +3,12 @@
 // Admin Rewards Management - Add, Edit, Delete Rewards
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Input } from 'components/ui/input'
+import { Button } from 'components/ui/button'
+import { Textarea } from 'components/ui/textarea'
+import { Switch } from 'components/ui/switch'
+import { Badge } from 'components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Plus, Edit2, Trash2, Save, X, Image as ImageIcon } from 'lucide-react'
 

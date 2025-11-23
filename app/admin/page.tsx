@@ -4,12 +4,12 @@
 // Including Customers tab with search functionality
 
 import { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from 'components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Input } from 'components/ui/input'
+import { Button } from 'components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from 'components/ui/table'
+import { Skeleton } from 'components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { Search, Users, Settings, ShoppingCart, TrendingUp, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -193,8 +193,8 @@ export default function AdminDashboard() {
       // Apply search filter to mock data
       const mockData = query
         ? allMockData.filter(user =>
-            user.phoneNumber.includes(query)
-          )
+          user.phoneNumber.includes(query)
+        )
         : allMockData
 
       console.log('📊 Mock data search results:', {
@@ -320,7 +320,44 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="text-center py-8 text-gray-500">
                   <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>POS functionality coming soon</p>
+                  {/* Navigation Buttons */}
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-semibold mb-4">การจัดการคะแนน</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start gap-2 h-16"
+                        onClick={() => window.location.href = '/admin/points'}
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">เพิ่มคะแนนให้ลูกค้า</div>
+                          <div className="text-sm text-gray-500">บันทึกการซื้อและให้คะแนน</div>
+                        </div>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start gap-2 h-16"
+                        onClick={() => window.location.href = '/admin/rewards'}
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">จัดการของรางวัล</div>
+                          <div className="text-sm text-gray-500">ตั้งค่าของแลกคะแนน</div>
+                        </div>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start gap-2 h-16"
+                        onClick={() => window.location.href = '/admin/redemptions'}
+                      >
+                        <div className="text-left">
+                          <div className="font-medium">ตรวจสอบการแลก</div>
+                          <div className="text-sm text-gray-500">ยืนยันและดำเนินการ</div>
+                        </div>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -527,8 +564,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Navigation Buttons */}
-                <div className="border-t pt-6">
+                Navigation Buttons
+                {/* <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">การจัดการคะแนน</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Button
@@ -564,7 +601,7 @@ export default function AdminDashboard() {
                       </div>
                     </Button>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </TabsContent>

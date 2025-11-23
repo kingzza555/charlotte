@@ -3,10 +3,10 @@
 // Admin Redemption Management - Verify and confirm customer redemptions
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Input } from 'components/ui/input'
+import { Button } from 'components/ui/button'
+import { Badge } from 'components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Search, Check, X, Clock, CheckCircle, XCircle, Users, Gift, Loader2 } from 'lucide-react'
 
