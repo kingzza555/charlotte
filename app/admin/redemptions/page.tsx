@@ -208,9 +208,9 @@ export default function RedemptionsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />รอดยืนยัน</Badge>
+        return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />รอยืนยัน</Badge>
       case 'VERIFIED':
-        return <Badge variant="default"><Check className="h-3 w-3 mr-1" />รอยดำเนินการ</Badge>
+        return <Badge variant="default"><Check className="h-3 w-3 mr-1" />รอดำเนินการ</Badge>
       case 'COMPLETED':
         return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />เสร็จสิ้น</Badge>
       case 'CANCELLED':
@@ -261,7 +261,7 @@ export default function RedemptionsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">รอดยืนยัน</p>
+                  <p className="text-sm font-medium text-gray-600">รอยืนยัน</p>
                   <p className="text-2xl font-bold text-orange-600">{statusCounts.PENDING || 0}</p>
                 </div>
                 <div className="bg-orange-100 p-2 rounded-full">
@@ -275,7 +275,7 @@ export default function RedemptionsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">รอดดำเนินการ</p>
+                  <p className="text-sm font-medium text-gray-600">รอดำเนินการ</p>
                   <p className="text-2xl font-bold text-blue-600">{statusCounts.VERIFIED || 0}</p>
                 </div>
                 <div className="bg-blue-100 p-2 rounded-full">
@@ -314,8 +314,8 @@ export default function RedemptionsPage() {
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="PENDING">รอดยืนยัน</option>
-                  <option value="VERIFIED">รอดดำเนินการ</option>
+                  <option value="PENDING">รอยืนยัน</option>
+                  <option value="VERIFIED">รอดำเนินการ</option>
                   <option value="COMPLETED">เสร็จสิ้น</option>
                   <option value="CANCELLED">ยกเลิก</option>
                   <option value="ALL">ทั้งหมด</option>

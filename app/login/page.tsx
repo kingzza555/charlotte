@@ -5,159 +5,204 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Button } from 'components/ui/button'
 import { Input } from 'components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from 'components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from 'components/ui/card'
 import { Label } from 'components/ui/label'
-import { Loader2, AlertCircle } from 'lucide-react'
-import { isValidThaiMobileNumber, formatPhoneForDisplay } from '@/lib/phoneUtils'
+import { Loader2, Smartphone, ArrowRight, ShieldCheck, Coffee } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function LoginPage() {
-    const [phoneNumber, setPhoneNumber] = useState('')
-    const [otp, setOtp] = useState('')
-    const [step, setStep] = useState<1 | 2>(1)
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState('')
-    const [phoneError, setPhoneError] = useState('')
     const router = useRouter()
+    const { toast } = useToast()
 
-    // Validate phone number in real-time
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-        setPhoneNumber(value)
+    const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE')
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [otpCode, setOtpCode] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
 
-        if (value && !isValidThaiMobileNumber(value)) {
-            setPhoneError('Please enter a valid Thai mobile number (e.g., 0812345678, 0912345678, 0612345678)')
-        } else {
-            setPhoneError('')
-        }
-    }
+    // ฟังก์ชันขอ OTP (Step 1)
+    const handleRequestOtp = async (e: React.FormEvent) => {
+        e.preventDefault()
 
-    const handleSendOtp = async () => {
-        if (!phoneNumber) {
-            setError('Please enter your phone number')
-            return
-        }
-        if (!isValidThaiMobileNumber(phoneNumber)) {
-            setError('Please enter a valid Thai mobile number (e.g., 0812345678, 0912345678, 0612345678)')
-            return
-        }
-        setError('')
-        setLoading(true)
-        try {
-            await axios.post('/api/auth/send-otp', { phoneNumber })
-            setStep(2)
-        } catch (err: any) {
-            const errorMessage = err.response?.data?.error || 'Failed to send OTP. Please try again.'
-            setError(errorMessage)
-            console.error(err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleVerifyOtp = async () => {
-        if (!otp) {
-            setError('Please enter the OTP')
-            return
-        }
-        setError('')
-        setLoading(true)
-        try {
-            const response = await axios.post('/api/auth/verify-otp', {
-                phoneNumber,
-                otpCode: otp,
+        // Validate เบอร์โทร (ต้อง 10 หลัก)
+        if (phoneNumber.length < 10) {
+            toast({
+                title: "เบอร์โทรไม่ถูกต้อง",
+                description: "กรุณากรอกเบอร์มือถือให้ครบ 10 หลัก",
+                variant: "destructive"
             })
-            const { token } = response.data
-            localStorage.setItem('token', token)
-            router.push('/dashboard')
-        } catch (err) {
-            setError('Invalid OTP. Please try again.')
-            console.error(err)
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            const res = await axios.post('/api/auth/send-otp', { phoneNumber })
+
+            if (res.data.success || res.status === 200) {
+                setStep('OTP')
+                toast({
+                    title: "ส่ง OTP สำเร็จ",
+                    description: "กรุณาตรวจสอบรหัสใน SMS ของคุณ",
+                })
+            }
+        } catch (error: any) {
+            console.error('OTP Error:', error)
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: error.response?.data?.error || "ไม่สามารถส่ง OTP ได้",
+                variant: "destructive"
+            })
         } finally {
-            setLoading(false)
+            setIsLoading(false)
+        }
+    }
+
+    // ฟังก์ชันยืนยัน OTP (Step 2)
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (otpCode.length !== 6) {
+            toast({ title: "รหัสไม่ถูกต้อง", description: "OTP ต้องมี 6 หลัก", variant: "destructive" })
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            const res = await axios.post('/api/auth/verify-otp', {
+                phoneNumber,
+                otpCode
+            })
+
+            if (res.data.token) {
+                // บันทึก Token
+                localStorage.setItem('token', res.data.token)
+
+                toast({ title: "เข้าสู่ระบบสำเร็จ!", description: "กำลังพาไปหน้าหลัก..." })
+
+                // ตรวจสอบ Role เพื่อเปลี่ยนหน้า
+                const user = res.data.user
+                if (user && user.role === 'ADMIN') {
+                    router.push('/admin')
+                } else {
+                    router.push('/dashboard')
+                }
+            }
+        } catch (error: any) {
+            console.error('Verify Error:', error)
+            toast({
+                title: "ยืนยันตัวตนล้มเหลว",
+                description: error.response?.data?.error || "รหัส OTP ไม่ถูกต้อง",
+                variant: "destructive"
+            })
+        } finally {
+            setIsLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-            <Card className="w-full max-w-md shadow-lg">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-                    <CardDescription className="text-center">
-                        Enter your phone number to access your rewards
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAF9] p-4">
+            {/* Background Decoration */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-amber-100/50 blur-3xl" />
+                <div className="absolute -bottom-[20%] -left-[10%] w-[500px] h-[500px] rounded-full bg-stone-200/50 blur-3xl" />
+            </div>
+
+            <Card className="w-full max-w-md border-0 shadow-xl bg-white/80 backdrop-blur-sm relative z-10 animate-fade-in-up">
+                <CardHeader className="text-center space-y-2 pb-8">
+                    <div className="mx-auto w-16 h-16 bg-stone-900 rounded-2xl flex items-center justify-center mb-4 shadow-lg rotate-3">
+                        <Coffee className="w-8 h-8 text-amber-400" />
+                    </div>
+                    <CardTitle className="text-2xl font-serif font-bold text-stone-900">
+                        Charlotte 58Cafe
+                    </CardTitle>
+                    <CardDescription className="text-stone-500">
+                        {step === 'PHONE'
+                            ? 'กรอกเบอร์โทรศัพท์เพื่อสะสมแต้มและรับสิทธิพิเศษ'
+                            : `กรอกรหัส 6 หลักที่ส่งไปยัง ${phoneNumber}`}
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    {error && (
-                        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
-                            {error}
-                        </div>
-                    )}
 
-                    {step === 1 ? (
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Thai Mobile Number</Label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <span className="text-gray-500 text-sm font-medium">+66</span>
+                <CardContent>
+                    {step === 'PHONE' ? (
+                        <form onSubmit={handleRequestOtp} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="phone" className="text-stone-600 font-medium">เบอร์มือถือ</Label>
+                                <div className="relative">
+                                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                                    <Input
+                                        id="phone"
+                                        type="tel"
+                                        placeholder="08x xxx xxxx"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 10))}
+                                        className="pl-10 h-12 text-lg tracking-wide bg-white border-stone-200 focus:border-stone-900 focus:ring-stone-900/20 transition-all"
+                                        autoFocus
+                                    />
                                 </div>
-                                <Input
-                                    id="phone"
-                                    type="tel"
-                                    placeholder="812345678"
-                                    value={phoneNumber}
-                                    onChange={handlePhoneChange}
-                                    disabled={loading}
-                                    className="pl-12"
-                                />
                             </div>
-                            {phoneError && (
-                                <div className="flex items-center gap-2 text-sm text-red-500">
-                                    <AlertCircle className="h-4 w-4" />
-                                    {phoneError}
-                                </div>
-                            )}
-                            <p className="text-xs text-gray-500">
-                                Enter your 9-digit number after +66 (e.g., 812345678 for +66 81 234 5678)
-                            </p>
-                        </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full h-12 text-base bg-stone-900 hover:bg-stone-800 text-white shadow-lg shadow-stone-900/20 transition-all hover:-translate-y-0.5"
+                                disabled={isLoading || phoneNumber.length < 10}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังส่ง SMS...
+                                    </>
+                                ) : (
+                                    <>
+                                        รับรหัส OTP <ArrowRight className="ml-2 h-4 w-4" />
+                                    </>
+                                )}
+                            </Button>
+                        </form>
                     ) : (
-                        <div className="space-y-2">
-                            <Label htmlFor="otp">One-Time Password</Label>
-                            <Input
-                                id="otp"
-                                type="text"
-                                placeholder="123456"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                disabled={loading}
-                                maxLength={6}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Sent to +66 {formatPhoneForDisplay(phoneNumber).replace(/^0/, '')}
-                            </p>
-                        </div>
+                        <form onSubmit={handleVerifyOtp} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="otp" className="text-stone-600 font-medium">รหัส OTP</Label>
+                                <div className="relative">
+                                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                                    <Input
+                                        id="otp"
+                                        type="text"
+                                        placeholder="123456"
+                                        value={otpCode}
+                                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').substring(0, 6))}
+                                        className="pl-10 h-12 text-lg tracking-[0.5em] text-center font-bold bg-white border-stone-200 focus:border-stone-900 focus:ring-stone-900/20"
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full h-12 text-base bg-stone-900 hover:bg-stone-800 text-white shadow-lg shadow-stone-900/20 transition-all hover:-translate-y-0.5"
+                                disabled={isLoading || otpCode.length < 6}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังตรวจสอบ...
+                                    </>
+                                ) : (
+                                    'ยืนยันรหัส'
+                                )}
+                            </Button>
+
+                            <button
+                                type="button"
+                                onClick={() => setStep('PHONE')}
+                                className="w-full text-sm text-stone-500 hover:text-stone-900 transition-colors"
+                            >
+                                เปลี่ยนเบอร์โทรศัพท์
+                            </button>
+                        </form>
                     )}
                 </CardContent>
-                <CardFooter>
-                    {step === 1 ? (
-                        <Button
-                            className="w-full"
-                            onClick={handleSendOtp}
-                            disabled={loading}
-                        >
-                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Get OTP
-                        </Button>
-                    ) : (
-                        <Button
-                            className="w-full"
-                            onClick={handleVerifyOtp}
-                            disabled={loading}
-                        >
-                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Verify & Login
-                        </Button>
-                    )}
+
+                <CardFooter className="justify-center pb-8">
+                    <p className="text-xs text-stone-400 text-center max-w-[200px]">
+                        โดยการเข้าสู่ระบบ คุณยอมรับข้อตกลงและเงื่อนไขการให้บริการ
+                    </p>
                 </CardFooter>
             </Card>
         </div>
